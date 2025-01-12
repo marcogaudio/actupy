@@ -54,9 +54,53 @@ def test_set_hypothesis_missing_age_in_hypothesis():
     with pytest.raises(KeyError):
         set_hypothesis(model_point, hypothesis)
 
+        def test_set_hypothesis_valid_input_list():
+            model_point_data_1 = pd.DataFrame({'age': [30, 40, 50], 'value': [100, 200, 300]})
+            model_point_data_2 = pd.DataFrame({'age': [35, 45, 55], 'value': [150, 250, 350]})
+            mortality_data = pd.DataFrame({'age': [30, 35, 40, 45, 50, 55], 'mortality_rate': [0.01, 0.015, 0.02, 0.025, 0.03, 0.035]})
+            
+            model_point_1 = ModelPoint(model_point_data_1)
+            model_point_2 = ModelPoint(model_point_data_2)
+            hypothesis = Hypothesis(mortality_data)
+            
+            updated_model_points = set_hypothesis([model_point_1, model_point_2], hypothesis)
+            
+            expected_data_1 = pd.DataFrame({
+                'age': [30, 40, 50],
+                'value': [100, 200, 300],
+                'mortality_rate': [0.01, 0.02, 0.03]
+            })
+            
+            expected_data_2 = pd.DataFrame({
+                'age': [35, 45, 55],
+                'value': [150, 250, 350],
+                'mortality_rate': [0.015, 0.025, 0.035]
+            })
+            
+            pd.testing.assert_frame_equal(updated_model_points[0].data, expected_data_1)
+            pd.testing.assert_frame_equal(updated_model_points[1].data, expected_data_2)
 
-model_point=ModelPoint(age=30, gender='M', premium=1000, sum_insured=50000, duration=10, seniority=5)
-hypothesis=Hypothesis(mortality=pd.DataFrame({'age': [30, 40, 50], 'qx': [0.01, 0.02, 0.03]}))
+        def test_set_hypothesis_invalid_model_point_list():
+            hypothesis = Hypothesis(pd.DataFrame({'age': [30, 40, 50], 'mortality_rate': [0.01, 0.02, 0.03]}))
+            
+            with pytest.raises(TypeError):
+                set_hypothesis(["not_a_model_point"], hypothesis)
 
-new_mp = set_hypothesis(model_point, hypothesis)
-print(new_mp)
+        def test_set_hypothesis_empty_model_point_list():
+            hypothesis = Hypothesis(pd.DataFrame({'age': [30, 40, 50], 'mortality_rate': [0.01, 0.02, 0.03]}))
+            
+            with pytest.raises(TypeError):
+                set_hypothesis([], hypothesis)
+
+        def test_set_hypothesis_missing_age_in_model_point_list():
+            model_point_data_1 = pd.DataFrame({'value': [100, 200, 300]})
+            model_point_data_2 = pd.DataFrame({'age': [35, 45, 55], 'value': [150, 250, 350]})
+            mortality_data = pd.DataFrame({'age': [30, 35, 40, 45, 50, 55], 'mortality_rate': [0.01, 0.015, 0.02, 0.025, 0.03, 0.035]})
+            
+            model_point_1 = ModelPoint(model_point_data_1)
+            model_point_2 = ModelPoint(model_point_data_2)
+            hypothesis = Hypothesis(mortality_data)
+            
+            with pytest.raises(KeyError):
+                set_hypothesis([model_point_1, model_point_2], hypothesis)
+
