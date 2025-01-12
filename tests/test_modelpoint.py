@@ -51,15 +51,3 @@ def test_modelpoint_from_dataframe_missing_columns():
     df = pd.DataFrame(data)
     with pytest.raises(ValueError, match="Mancano le colonne richieste nel DataFrame: duration"):
         ModelPoint.from_dataframe(df)
-
-data = {
-        'age': [30, 40],
-        'gender': ['M', 'F'],
-        'premium': [1000, 1500],
-        'sum_insured': [50000, 60000],
-        'duration': [10, 15],
-        'seniority': [5, 10]
-    }
-df = pd.DataFrame(data)
-model_points = ModelPoint.from_dataframe(df)
-print(model_points)
