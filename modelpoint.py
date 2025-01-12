@@ -67,15 +67,22 @@ class ModelPoint:
         # Crea la lista di ModelPoint
         model_points = []
         for _, row in df.iterrows():
+          # Ottieni il dizionario dalla riga
+            row_dict = row.to_dict()
+        
+        # Rimuovi le chiavi che verranno passate esplicitamente
+            for key in required_columns + ["seniority"]:
+                row_dict.pop(key, None)
+        
+        # Inizializza il ModelPoint con i valori espliciti e i kwargs rimanenti
             model_points.append(ModelPoint(
                 age=row["age"],
                 gender=row["gender"],
                 premium=row["premium"],
                 sum_insured=row["sum_insured"],
                 duration=row["duration"],
-                seniority=row.get("seniority")  # Seniority è opzionale
-            **row.to_dict()  # Aggiungi tutti i dati della riga come attributi generici
-       
+                seniority=row.get("seniority"),  # Seniority è opzionale
+                **row_dict  # Passa gli attributi generici rimanenti
             ))
 
         return model_points
