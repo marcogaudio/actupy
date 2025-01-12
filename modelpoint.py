@@ -5,7 +5,7 @@ class ModelPoint:
     Classe per rappresentare un singolo model point per una gruppo omogeneo di polizze assicurative.
     """
 
-    def __init__(self, age, gender, premium, sum_insured, duration, seniority=None):
+    def __init__(self, age, gender, premium, sum_insured, duration, seniority=None, **kwargs):
         """
         Inizializza un ModelPoint con i dati forniti.
         """
@@ -15,6 +15,23 @@ class ModelPoint:
         self.sum_insured = sum_insured
         self.duration = duration
         self.seniority = seniority
+        self.attributes = kwargs # Altri attributi possono essere passati come argomenti
+
+       # Creiamo un dizionario che contiene sia gli attributi predefiniti che quelli passati come kwargs
+        data_dict = {
+            'age': [age],
+            'gender': [gender],
+            'premium': [premium],
+            'sum_insured': [sum_insured],
+            'duration': [duration],
+            'seniority': [seniority] if seniority else [None]
+        }
+        
+        # Aggiungi gli attributi generici dal kwargs al dizionario
+        data_dict.update(kwargs)  # Unisce i dati extra nel dizionario
+
+        # Creiamo il DataFrame con i dati combinati
+        self.data = pd.DataFrame(data_dict)                                    
 
     def __str__(self):
         return (
@@ -25,6 +42,8 @@ class ModelPoint:
             f"  sum_insured={self.sum_insured},\n"
             f"  duration={self.duration},\n"
             f"  seniority={self.seniority}\n"
+            f"  attributes={self.attributes}\n"
+
             f")"
         )
     
@@ -55,6 +74,8 @@ class ModelPoint:
                 sum_insured=row["sum_insured"],
                 duration=row["duration"],
                 seniority=row.get("seniority")  # Seniority è opzionale
+            **row.to_dict()  # Aggiungi tutti i dati della riga come attributi generici
+       
             ))
 
         return model_points
@@ -77,6 +98,7 @@ class ModelPoint:
         if missing_columns:
             raise ValueError(f"Mancano le colonne richieste nel file Excel: {', '.join(missing_columns)}")
 
+        ModelPoint.data = df  # Impostiamo il DataFrame come attributo di classe
         # Crea la lista di ModelPoint
         model_points = []
         for _, row in df.iterrows():
