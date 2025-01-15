@@ -5,7 +5,7 @@ class Hypothesis:
     Classe per rappresentare le ipotesi di una polizza (mortalità, lapse, etc.).
     """
     def __init__(self, mortality=None, lapse=None):
-        # Mortality: può essere una tabella o un valore costante
+        # Mortality: può essere una tabella (pandas, polars, etc..) o un valore costante
         if isinstance(mortality, pd.DataFrame):
             if not set(["age", "qx"]).issubset(mortality.columns):
                 raise ValueError("La tabella di mortalità deve avere le colonne 'age' e 'qx'.")
