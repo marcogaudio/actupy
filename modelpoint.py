@@ -1,5 +1,7 @@
 import pandas as pd
 import polars as pl
+from hypothesis import Hypothesis
+
 class ModelPoint:
     """
     Classe per rappresentare una tabella di model point per un gruppo omogeneo di polizze assicurative.
@@ -13,8 +15,13 @@ class ModelPoint:
         :raises TypeError: Se data non è un DataFrame.
         :raises ValueError: Se mancano colonne richieste nel DataFrame.
         """
+        
+        # se non è df (pandas o polars), restituisco errore
         if not isinstance(data, (pl.DataFrame, pd.DataFrame)):
             raise TypeError(f"L'input 'data' deve essere un oggetto pandas.DataFrame, non {type(data)}.")
+        # se è pandas, trasformo in polars
+        if isinstance(data, pd.DataFrame):
+            data = pl.from_pandas(data)
 
         # Colonne richieste
         self.required_columns = ["age", "gender", "premium", "sum_insured", "duration"]
@@ -37,6 +44,7 @@ class ModelPoint:
         """
         return self.data
 
+    ## UPLOAD METHOD
     @classmethod
     def from_excel(cls, file_path, sheet_name=0):
         """
@@ -49,18 +57,26 @@ class ModelPoint:
         # Leggi il file Excel in un DataFrame
         df = pd.read_excel(file_path, sheet_name=sheet_name)
         return cls(df)
+    
+    # OTHER METHODS
 
-    @staticmethod
-    def validate_dataframe(df: pd.DataFrame, required_columns: list):
-        """
-        Valida che un DataFrame contenga le colonne richieste.
+    def set_hypothesis(self, hypothesis):
 
-        :param df: DataFrame da validare.
-        :param required_columns: Lista di colonne richieste.
-        :raises ValueError: Se mancano colonne richieste.
-        """
-        if not isinstance(df, pd.DataFrame):
-            raise TypeError(f"L'input deve essere un oggetto pandas.DataFrame, non {type(df)}.")
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
-            raise ValueError(f"Mancano le colonne richieste nel DataFrame: {', '.join(missing_columns)}")
+        # check su tipo Hypothesis
+        # inserire come input attr. on
+
+        update_data = (
+            self.data.
+            join(hypothesis.mortality, on = "age", how = "left")
+            )
+        
+        return ModelPoint(update_data)
+    
+    def apply_BE(self, BE_factor):
+        update_data = (
+            self.data
+            .with_columns(pl.col("qx" * BE_factor).alias("BE_qx"))
+            .with_columns()
+        )
+
+        return ModelPoint(update_data)
