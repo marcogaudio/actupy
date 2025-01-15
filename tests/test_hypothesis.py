@@ -2,6 +2,16 @@ from hypothesis import Hypothesis
 import pandas as pd
 import pytest
 
+
+assumpt = Hypothesis(pd.DataFrame(
+    {
+        'age' : [18,19,20,30,40,50],
+        'qx' : [0.01, 0.02, 0.03, 0.04, 0.05, 0.07]
+    }
+))
+print(type(assumpt))
+print(type(assumpt.mortality))
+""""
 def test_mortality_is_dataframe():
     mortality_table = pd.DataFrame({
         "age": [20, 21, 22, 23, 24, 25],
@@ -59,3 +69,4 @@ def test_lapse_is_double():
 def test_lapse_is_none():
     hypothesis = Hypothesis(lapse=None)
     assert hypothesis.lapse.empty
+    """
