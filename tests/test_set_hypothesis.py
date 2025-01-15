@@ -103,3 +103,5 @@ def test_set_hypothesis_missing_age_in_hypothesis():
             
             with pytest.raises(KeyError):
                 set_hypothesis([model_point_1, model_point_2], hypothesis)
+
+
