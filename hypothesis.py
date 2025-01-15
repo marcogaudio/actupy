@@ -1,5 +1,5 @@
 import pandas as pd
-
+import polars as pl
 class Hypothesis:
     """
     Classe per rappresentare le ipotesi di una polizza (mortalità, lapse, etc.).
@@ -7,6 +7,8 @@ class Hypothesis:
     def __init__(self, mortality=None, lapse=None):
         # Mortality: può essere una tabella (pandas, polars, etc..) o un valore costante
         if isinstance(mortality, pd.DataFrame):
+            mortality = pl.from_pandas(mortality)
+        if isinstance(mortality, pl.DataFrame):
             if not set(["age", "qx"]).issubset(mortality.columns):
                 raise ValueError("La tabella di mortalità deve avere le colonne 'age' e 'qx'.")
             self.mortality = mortality
