@@ -1,121 +1,66 @@
 import pandas as pd
-
+import polars as pl
 class ModelPoint:
     """
-    Classe per rappresentare un singolo model point per una gruppo omogeneo di polizze assicurative.
+    Classe per rappresentare una tabella di model point per un gruppo omogeneo di polizze assicurative.
     """
 
-    def __init__(self, age, gender, premium, sum_insured, duration, seniority=None, **kwargs):
+    def __init__(self, data):
         """
-        Inizializza un ModelPoint con i dati forniti.
+        Inizializza un oggetto ModelPoint con un DataFrame pandas.
+
+        :param data: DataFrame contenente i dati dei model point.
+        :raises TypeError: Se data non è un DataFrame.
+        :raises ValueError: Se mancano colonne richieste nel DataFrame.
         """
-        self.age = age
-        self.gender = gender
-        self.premium = premium
-        self.sum_insured = sum_insured
-        self.duration = duration
-        self.seniority = seniority
-        self.attributes = kwargs # Altri attributi possono essere passati come argomenti
+        if not isinstance(data, (pl.DataFrame, pd.DataFrame)):
+            raise TypeError(f"L'input 'data' deve essere un oggetto pandas.DataFrame, non {type(data)}.")
 
-       # Creiamo un dizionario che contiene sia gli attributi predefiniti che quelli passati come kwargs
-        data_dict = {
-            'age': [age],
-            'gender': [gender],
-            'premium': [premium],
-            'sum_insured': [sum_insured],
-            'duration': [duration],
-            'seniority': [seniority] if seniority else [None]
-        }
-        
-        # Aggiungi gli attributi generici dal kwargs al dizionario
-        data_dict.update(kwargs)  # Unisce i dati extra nel dizionario
-
-        # Creiamo il DataFrame con i dati combinati
-        self.data = pd.DataFrame(data_dict)                                    
-
-    def __str__(self):
-        return (
-            f"ModelPoint(\n"
-            f"  age={self.age},\n"
-            f"  gender={self.gender},\n"
-            f"  premium={self.premium},\n"
-            f"  sum_insured={self.sum_insured},\n"
-            f"  duration={self.duration},\n"
-            f"  seniority={self.seniority}\n"
-            f"  attributes={self.attributes}\n"
-
-            f")"
-        )
-    
-    def __repr__(self):
-        return self.__str__()
-
-    @staticmethod
-    def from_dataframe(df):
-        """
-        Metodo statico per creare una lista di ModelPoint a partire da un DataFrame pandas.
-        
-        :param df: DataFrame contenente i dati di model point
-        :return: Lista di oggetti ModelPoint
-        """
-        # Verifica che le colonne richieste siano presenti
-        required_columns = ["age", "gender", "premium", "sum_insured", "duration"]
-        missing_columns = [col for col in required_columns if col not in df.columns]
+        # Colonne richieste
+        self.required_columns = ["age", "gender", "premium", "sum_insured", "duration"]
+        missing_columns = [col for col in self.required_columns if col not in data.columns]
         if missing_columns:
             raise ValueError(f"Mancano le colonne richieste nel DataFrame: {', '.join(missing_columns)}")
 
-        # Crea la lista di ModelPoint
-        model_points = []
-        for _, row in df.iterrows():
-          # Ottieni il dizionario dalla riga
-            row_dict = row.to_dict()
-        
-        # Rimuovi le chiavi che verranno passate esplicitamente
-            for key in required_columns + ["seniority"]:
-                row_dict.pop(key, None)
-        
-        # Inizializza il ModelPoint con i valori espliciti e i kwargs rimanenti
-            model_points.append(ModelPoint(
-                age=row["age"],
-                gender=row["gender"],
-                premium=row["premium"],
-                sum_insured=row["sum_insured"],
-                duration=row["duration"],
-                seniority=row.get("seniority"),  # Seniority è opzionale
-                **row_dict  # Passa gli attributi generici rimanenti
-            ))
+        # Imposta il DataFrame come attributo della classe
+        self.data = data
 
-        return model_points
+    def __str__(self):
+        return f"ModelPoint con {len(self.data)} record:\n{self.data}"
 
-    @staticmethod
-    def from_excel(file_path, sheet_name=0):
+    def __repr__(self):
+        return self.__str__()
+
+    def to_dataframe(self):
         """
-        Metodo statico per creare una lista di ModelPoint a partire da un file Excel.
-        
-        :param file_path: Percorso al file Excel
-        :param sheet_name: Nome o indice del foglio Excel da leggere (default: primo foglio)
-        :return: Lista di oggetti ModelPoint
+        Restituisce i dati del ModelPoint come un DataFrame pandas.
+        """
+        return self.data
+
+    @classmethod
+    def from_excel(cls, file_path, sheet_name=0):
+        """
+        Metodo di classe per creare un oggetto ModelPoint a partire da un file Excel.
+
+        :param file_path: Percorso al file Excel.
+        :param sheet_name: Nome o indice del foglio Excel da leggere (default: primo foglio).
+        :return: Oggetto ModelPoint.
         """
         # Leggi il file Excel in un DataFrame
         df = pd.read_excel(file_path, sheet_name=sheet_name)
+        return cls(df)
 
-        # Verifica che le colonne richieste siano presenti
-        required_columns = ["age", "gender", "premium", "sum_insured", "duration"]
+    @staticmethod
+    def validate_dataframe(df: pd.DataFrame, required_columns: list):
+        """
+        Valida che un DataFrame contenga le colonne richieste.
+
+        :param df: DataFrame da validare.
+        :param required_columns: Lista di colonne richieste.
+        :raises ValueError: Se mancano colonne richieste.
+        """
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError(f"L'input deve essere un oggetto pandas.DataFrame, non {type(df)}.")
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
-            raise ValueError(f"Mancano le colonne richieste nel file Excel: {', '.join(missing_columns)}")
-
-        ModelPoint.data = df  # Impostiamo il DataFrame come attributo di classe
-        # Crea la lista di ModelPoint
-        model_points = []
-        for _, row in df.iterrows():
-            model_points.append(ModelPoint(
-                age=row["age"],
-                gender=row["gender"],
-                premium=row["premium"],
-                sum_insured=row["sum_insured"],
-                duration=row["duration"],
-                seniority=row.get("seniority")  # Seniority è opzionale
-            ))
-        
-        return model_points
+            raise ValueError(f"Mancano le colonne richieste nel DataFrame: {', '.join(missing_columns)}")
