@@ -1,6 +1,7 @@
 import pandas as pd
 import polars as pl
 from hypothesis import Hypothesis
+from product import Product
 
 class ModelPoint:
     """
@@ -9,7 +10,7 @@ class ModelPoint:
 
     def __init__(self, data):
         """
-        Inizializza un oggetto ModelPoint con un DataFrame pandas.
+        Inizializza un oggetto ModelPoint con un DataFrame polars.
 
         :param data: DataFrame contenente i dati dei model point.
         :raises TypeError: Se data non è un DataFrame.
@@ -64,6 +65,7 @@ class ModelPoint:
 
         # check su tipo Hypothesis
         # inserire come input attr. on
+        # forse devo aggiornare data?
 
         update_data = (
             self.data.
@@ -72,11 +74,45 @@ class ModelPoint:
         
         return ModelPoint(update_data)
     
+    # in teoria potrei gestire le BE direttamente con polars
     def apply_BE(self, BE_factor):
+
+        if not isinstance(BE_factor, float):
+            # per adesso accetto solo un valore numerico
+            # potrei aggiungere un parametro per gestire il join con un altro df
+            raise ValueError("BE_factor deve essere un singolo valore numerico.")
+        
         update_data = (
             self.data
-            .with_columns(pl.col("qx" * BE_factor).alias("BE_qx"))
-            .with_columns()
+            # non funziona
+            .with_columns(BE = BE_factor)
+            .with_columns((pl.col("qx") * pl.col("BE")).alias("BE_qx"))
         )
 
+
+        return ModelPoint(update_data)
+    
+
+    def add_product_features(self, product: Product):
+        """
+        Aggiunge le caratteristiche del prodotto al ModelPoint.
+
+        :param product: Oggetto Product contenente le caratteristiche del prodotto.
+        :return: ModelPoint con le caratteristiche del prodotto aggiunte.
+        """
+        # Check se product è un oggetto Product
+        if not isinstance(product, Product):
+            raise TypeError(f"product deve essere un oggetto Product, non {type(product)}")
+        
+        # Aggiungi le colonne del prodotto al DataFrame
+        update_data = (
+            self.data
+            .with_columns(
+                premium_type = pl.lit(product.premium_type),
+                loading = pl.lit(product.loading),
+                pro_rata_net = pl.lit(product.pro_rata_net),
+                pro_rata_loading = pl.lit(product.pro_rata_loading)
+            )
+        )
+        
         return ModelPoint(update_data)
